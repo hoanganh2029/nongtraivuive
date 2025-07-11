@@ -5,24 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nông Trại Vui Vẻ</title>
 
-  <!-- Monetag SDK - sử dụng ID của bạn -->
-  <script src="https://cdn.monetag.com/sdk.js" data-monetag="2956998"></script>
-
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Monetag SDK - Đã đổi sang zone 2956998 -->
+  <script src="//libtl.com/sdk.js" data-zone="2956998" data-sdk="show_2956998"></script>
 
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 30px;
-      background-color: #fffcee;
+      background-color: #fffde7;
     }
     h1 {
-      font-size: 24px;
+      font-size: 26px;
     }
     button {
-      padding: 15px 30px;
+      padding: 14px 28px;
       font-size: 18px;
       background-color: #4CAF50;
       color: white;
@@ -37,25 +37,29 @@
 </head>
 <body>
   <h1>🌾 Nông Trại Vui Vẻ 🌾</h1>
-  <p>Nhấn để xem quảng cáo và nhận <strong>10 xu</strong> miễn phí!</p>
+  <p>Xem quảng cáo để nhận <strong>10 xu</strong> miễn phí!</p>
 
-  <button onclick="showRewardAd()">🎁 Nhận xu</button>
+  <button onclick="showAd()">🎁 Xem quảng cáo</button>
 
   <script>
-    function showRewardAd() {
-      if (window.monetagRewardAd && window.monetagRewardAd.show) {
-        window.monetagRewardAd.show({
-          onRewarded: () => {
-            Telegram.WebApp.sendData("ad_rewarded");
-            alert("✅ Bạn đã xem xong quảng cáo và nhận 10 xu!");
-          },
-          onDismissed: () => {
-            alert("❌ Bạn đã đóng quảng cáo.");
-          }
+    Telegram.WebApp.ready();
+
+    const telegramUserId = Telegram.WebApp.initDataUnsafe?.user?.id?.toString() || "unknown";
+
+    // Preload quảng cáo để giảm delay
+    show_2956998({ type: 'preload', ymid: telegramUserId })
+      .then(() => console.log('✅ Preload thành công'))
+      .catch(() => console.log('⚠️ Không preload được'));
+
+    function showAd() {
+      show_2956998({ ymid: telegramUserId })
+        .then(() => {
+          Telegram.WebApp.sendData("ad_rewarded");
+          alert('✅ Bạn đã xem xong quảng cáo và nhận 10 xu!');
+        })
+        .catch(() => {
+          alert('❌ Quảng cáo bị lỗi hoặc bị đóng sớm.');
         });
-      } else {
-        alert("⚠️ Quảng cáo hiện không khả dụng. Thử lại sau.");
-      }
     }
   </script>
 </body>
