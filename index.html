@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nông Trại Vui Vẻ</title>
+
+  <!-- Monetag SDK - sử dụng ID của bạn -->
+  <script src="https://cdn.monetag.com/sdk.js" data-monetag="2956998"></script>
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      background-color: #fffcee;
+    }
+    h1 {
+      font-size: 24px;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #388e3c;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌾 Nông Trại Vui Vẻ 🌾</h1>
+  <p>Nhấn để xem quảng cáo và nhận <strong>10 xu</strong> miễn phí!</p>
+
+  <button onclick="showRewardAd()">🎁 Nhận xu</button>
+
+  <script>
+    function showRewardAd() {
+      if (window.monetagRewardAd && window.monetagRewardAd.show) {
+        window.monetagRewardAd.show({
+          onRewarded: () => {
+            Telegram.WebApp.sendData("ad_rewarded");
+            alert("✅ Bạn đã xem xong quảng cáo và nhận 10 xu!");
+          },
+          onDismissed: () => {
+            alert("❌ Bạn đã đóng quảng cáo.");
+          }
+        });
+      } else {
+        alert("⚠️ Quảng cáo hiện không khả dụng. Thử lại sau.");
+      }
+    }
+  </script>
+</body>
+</html>
