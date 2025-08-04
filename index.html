@@ -1,66 +1,413 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nông Trại Vui Vẻ</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All-in-One Automation Hub v12.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --bg-main: #111827;
+            --bg-glass: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-vipig: #8b5cf6;
+            --accent-ttc: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-family: 'Quicksand', sans-serif;
+        }
 
-  <!-- Telegram WebApp SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <!-- Monetag SDK - Đã đổi sang zone 2956998 -->
-  <script src="//libtl.com/sdk.js" data-zone="2956998" data-sdk="show_2956998"></script>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-card); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px;
-      background-color: #fffde7;
-    }
-    h1 {
-      font-size: 26px;
-    }
-    button {
-      padding: 14px 28px;
-      font-size: 18px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #388e3c;
-    }
-  </style>
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(-45deg, #020617, #111827, #1e293b, #334155);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .sidebar-header span {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .sidebar-nav .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+        }
+
+        .sidebar-nav .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .sidebar-nav .nav-btn.active { color: white; }
+        .sidebar-nav .nav-btn#nav-vipig.active { background-color: var(--accent-vipig); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2); }
+        .sidebar-nav .nav-btn#nav-ttc.active { background-color: var(--accent-ttc); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); }
+        .sidebar-nav .icon { width: 24px; height: 24px; }
+        
+        .sidebar-footer {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 3rem;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        .hub-container { display: none; }
+        .hub-container.active { display: block; animation: fadeIn 0.5s ease; }
+
+        .content-header {
+            margin-bottom: 2rem;
+        }
+        .content-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .content-header .icon { width: 36px; height: 36px; }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .grid-col-span-2 { grid-column: span 2; }
+        @media (max-width: 1024px) {
+            .grid-col-span-2 { grid-column: span 1; }
+        }
+
+
+        h2 { margin-top: 0; font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;}
+        h2 .icon { width: 20px; height: 20px; }
+
+        .input-group { display: flex; flex-direction: column; gap: 1rem; }
+        .input-field { background-color: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.85rem 1rem; border-radius: 8px; font-size: 1rem; width: 100%; transition: all 0.2s ease; font-family: var(--font-family); }
+        textarea.input-field { min-height: 100px; resize: vertical; }
+        .btn { color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; font-size: 1rem; }
+        .btn .icon { width: 20px; height: 20px; }
+        .btn:disabled { background: #475569 !important; color: #64748b !important; cursor: not-allowed; box-shadow: none !important; }
+        .btn-vipig { background: var(--accent-vipig); } .btn-ttc { background: var(--accent-ttc); } .btn-stop { background: var(--danger); }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; text-align: left; }
+        .info-item h3 { margin: 0 0 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;}
+        .info-item h3 .icon { width: 16px; height: 16px; opacity: 0.7; }
+        .info-item p { margin: 0; font-size: 1.2rem; font-weight: 600; word-break: break-all; display: flex; align-items: center; gap: 0.5rem; }
+        .verified-badge { color: #3b82f6; display: none; } .verified-badge .icon { width: 16px; height: 16px; }
+        .log-container { background-color: rgba(2, 6, 23, 0.5); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; height: 350px; overflow-y: auto; font-family: monospace; font-size: 0.9rem; }
+        .log-entry { margin: 0 0 0.5rem 0; display: flex; align-items: flex-start; }
+        .log-time { color: var(--text-secondary); margin-right: 0.75rem; font-size: 0.8rem; flex-shrink: 0; }
+        .log-msg.info { color: #60a5fa; } .log-msg.success { color: var(--success); } .log-msg.error { color: var(--danger); } .log-msg.action { color: #c084fc; } .log-msg.warning { color: var(--warning); }
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end; }
+        .label-input { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); }
+        #chart-container { position: relative; height: 150px; margin-top: 1rem; }
+        #toast-container { position: fixed; bottom: 1rem; right: 1rem; z-index: 1000; display: flex; flex-direction: column; gap: 0.75rem;}
+        .toast { padding: 1rem 1.5rem; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: slideInToast 0.3s ease, fadeOutToast 0.3s ease 3.7s forwards; background: var(--bg-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--border-color);}
+        .toast.success { border-left: 4px solid var(--success); } .toast.error { border-left: 4px solid var(--danger); } .toast.info { border-left: 4px solid var(--accent-ttc); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInToast { from { transform: translateX(120%); } to { transform: translateX(0); } }
+        @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; } }
+    </style>
 </head>
 <body>
-  <h1>🌾 Nông Trại Vui Vẻ 🌾</h1>
-  <p>Xem quảng cáo để nhận <strong>10 xu</strong> miễn phí!</p>
+    <svg width="0" height="0" style="display:none;">
+        <defs>
+            <symbol id="icon-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></symbol>
+            <symbol id="icon-facebook" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.04c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm2.24 10.38h-1.93v6.54h-2.65v-6.54h-1.28v-2.22h1.28v-1.55c0-1.26.76-1.95 1.89-1.95.54 0 1 .04 1.13.06v2.1h-1.24c-.61 0-.73.29-.73.72v1.61h1.96l-.26 2.22z"></path></symbol>
+            <symbol id="icon-verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.25 17.292l-4.5-4.364 1.857-1.858 2.643 2.506 5.643-5.784 1.857 1.857-7.5 7.643z"/></symbol>
+            <symbol id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></symbol>
+            <symbol id="icon-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"></rect></symbol>
+            <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></symbol>
+            <symbol id="icon-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line></symbol>
+            <symbol id="icon-status" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></symbol>
+            <symbol id="icon-jobs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></symbol>
+            <symbol id="icon-config" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></symbol>
+        </defs>
+    </svg>
 
-  <button onclick="showAd()">🎁 Xem quảng cáo</button>
+    <div id="toast-container"></div>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                Auto<span>Hub</span>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" id="nav-vipig" onclick="switchTab('vipig')"><svg class="icon"><use href="#icon-instagram"></use></svg> VipIG Hub</button>
+                <button class="nav-btn" id="nav-ttc" onclick="switchTab('ttc')"><svg class="icon"><use href="#icon-facebook"></use></svg> TTC Hub</button>
+            </nav>
+            <div class="sidebar-footer">
+                <p>v12.0 - by Gemini</p>
+            </div>
+        </aside>
 
-  <script>
-    Telegram.WebApp.ready();
+        <main class="main-content">
+            <div id="vipig-hub" class="hub-container active">
+                <div class="content-header">
+                    <h1 style="color: var(--accent-vipig);"><svg class="icon"><use href="#icon-instagram"></use></svg>VipIG Automation</h1>
+                </div>
+                <div class="content-grid">
+                    <div class="card">
+                        <h2><svg class="icon"><use href="#icon-config"></use></svg> Cấu hình VipIG</h2>
+                        <div class="input-group">
+                            <input type="text" id="vipig-user" class="input-field" placeholder="Tài khoản VipIG...">
+                            <input type="password" id="vipig-pass" class="input-field" placeholder="Mật khẩu VipIG...">
+                            <textarea id="ig-cookies" class="input-field" placeholder="Dán danh sách Cookie Instagram..."></textarea>
+                        </div>
+                    </div>
+                     <div class="card">
+                        <h2><svg class="icon"><use href="#icon-config"></use></svg>Bảng điều khiển</h2>
+                         <div class="controls-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="label-input">Delay (giây)<input type="number" id="vipig-delay-input" class="input-field" value="20"></div>
+                            <div class="label-input">Jobs / Nick<input type="number" id="vipig-limit-input" class="input-field" value="10"></div>
+                            <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                                 <button class="btn btn-vipig" id="vipig-start-btn"><svg class="icon"><use href="#icon-play"></use></svg> Bắt đầu</button>
+                                 <button class="btn btn-stop" id="vipig-stop-btn" disabled><svg class="icon"><use href="#icon-stop"></use></svg> Dừng</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card grid-col-span-2">
+                        <h2><svg class="icon"><use href="#icon-status"></use></svg>Thông tin & Trạng thái</h2>
+                        <div class="info-grid">
+                             <div class="info-item"><h3><svg class="icon"><use href="#icon-user"></use></svg>Tài khoản</h3><p id="vipig-info-user">N/A <span id="vipig-verified" class="verified-badge"><svg class="icon"><use href="#icon-verified"></use></svg></span></p></div>
+                             <div class="info-item"><h3><svg class="icon"><use href="#icon-coin"></use></svg>Số Xu</h3><p id="vipig-info-coin">N/A</p></div>
+                             <div class="info-item"><h3><svg class="icon"><use href="#icon-jobs"></use></svg>Đã làm</h3><p id="vipig-info-jobs-done">0</p></div>
+                             <div class="info-item"><h3><svg class="icon"><use href="#icon-instagram"></use></svg>IG Hiện tại</h3><p id="vipig-info-ig-current">N/A</p></div>
+                             <div class="info-item grid-col-span-2"><h3><svg class="icon"><use href="#icon-status"></use></svg>Trạng thái</h3><p id="vipig-info-status">Dừng</p></div>
+                        </div>
+                    </div>
+                    <div class="card grid-col-span-2">
+                        <h2><svg class="icon"><use href="#icon-jobs"></use></svg>Nhật ký hoạt động VipIG</h2>
+                        <div id="vipig-log-container" class="log-container"></div>
+                    </div>
+                </div>
+            </div>
 
-    const telegramUserId = Telegram.WebApp.initDataUnsafe?.user?.id?.toString() || "unknown";
+            <div id="ttc-hub" class="hub-container">
+                 <div class="content-header">
+                    <h1 style="color: var(--accent-ttc);"><svg class="icon"><use href="#icon-facebook"></use></svg>TTC Automation</h1>
+                </div>
+                 <div class="content-grid">
+                    <div class="card">
+                        <h2><svg class="icon"><use href="#icon-config"></use></svg> Cấu hình TTC</h2>
+                        <div class="input-group">
+                            <input type="password" id="ttc-token" class="input-field" placeholder="Dán Token TuongTacCheo...">
+                            <textarea id="fb-tokens" class="input-field" placeholder="Dán danh sách Token Facebook..."></textarea>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2><svg class="icon"><use href="#icon-config"></use></svg>Bảng điều khiển</h2>
+                        <div class="controls-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="label-input">Delay (s)<input type="number" id="ttc-delay-input" class="input-field" value="10"></div>
+                            <div class="label-input">Jobs/Token<input type="number" id="ttc-limit-input" class="input-field" value="15"></div>
+                            <div class="label-input">Fails/Token<input type="number" id="ttc-fail-limit-input" class="input-field" value="5"></div>
+                             <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                                 <button class="btn btn-ttc" id="ttc-start-btn"><svg class="icon"><use href="#icon-play"></use></svg> Bắt đầu</button>
+                                 <button class="btn btn-stop" id="ttc-stop-btn" disabled><svg class="icon"><use href="#icon-stop"></use></svg> Dừng</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card grid-col-span-2">
+                        <h2><svg class="icon"><use href="#icon-status"></use></svg>Thông tin & Trạng thái</h2>
+                        <div class="info-grid">
+                            <div class="info-item"><h3><svg class="icon"><use href="#icon-user"></use></svg>Tài khoản</h3><p id="ttc-info-user">N/A <span id="ttc-verified" class="verified-badge"><svg class="icon"><use href="#icon-verified"></use></svg></span></p></div>
+                            <div class="info-item"><h3><svg class="icon"><use href="#icon-coin"></use></svg>Số Xu</h3><p id="ttc-info-coin">N/A</p></div>
+                            <div class="info-item"><h3><svg class="icon"><use href="#icon-jobs"></use></svg>Đã làm</h3><p id="ttc-info-jobs-done">0</p></div>
+                            <div class="info-item"><h3><svg class="icon"><use href="#icon-facebook"></use></svg>FB Hiện tại</h3><p id="ttc-info-fb-current">N/A</p></div>
+                            <div class="info-item grid-col-span-2"><h3><svg class="icon"><use href="#icon-status"></use></svg>Trạng thái</h3><p id="ttc-info-status">Dừng</p></div>
+                        </div>
+                    </div>
+                    <div class="card grid-col-span-2">
+                        <h2><svg class="icon"><use href="#icon-jobs"></use></svg>Nhật ký hoạt động TTC</h2>
+                        <div id="ttc-log-container" class="log-container"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
-    // Preload quảng cáo để giảm delay
-    show_2956998({ type: 'preload', ymid: telegramUserId })
-      .then(() => console.log('✅ Preload thành công'))
-      .catch(() => console.log('⚠️ Không preload được'));
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.hub-container, .nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`${tabName}-hub`).classList.add('active');
+            document.getElementById(`nav-${tabName}`).classList.add('active');
+        }
 
-    function showAd() {
-      show_2956998({ ymid: telegramUserId })
-        .then(() => {
-          Telegram.WebApp.sendData("ad_rewarded");
-          alert('✅ Bạn đã xem xong quảng cáo và nhận 10 xu!');
-        })
-        .catch(() => {
-          alert('❌ Quảng cáo bị lỗi hoặc bị đóng sớm.');
+        function updateUI(state) {
+            const vipig = state.vipig;
+            if(vipig) {
+                document.getElementById('vipig-info-user').firstChild.textContent = vipig.stats.user;
+                document.getElementById('vipig-verified').style.display = vipig.stats.user !== 'N/A' ? 'inline-block' : 'none';
+                document.getElementById('vipig-info-coin').textContent = vipig.stats.coin;
+                document.getElementById('vipig-info-jobs-done').textContent = vipig.stats.jobsDone;
+                document.getElementById('vipig-info-status').textContent = vipig.stats.status;
+                document.getElementById('vipig-info-status').style.color = vipig.stats.statusColor;
+                document.getElementById('vipig-info-ig-current').textContent = vipig.stats.currentIg;
+                document.getElementById('vipig-start-btn').disabled = vipig.isRunning;
+                document.getElementById('vipig-stop-btn').disabled = !vipig.isRunning;
+            }
+
+            const ttc = state.ttc;
+            if(ttc) {
+                document.getElementById('ttc-info-user').firstChild.textContent = ttc.stats.user;
+                document.getElementById('ttc-verified').style.display = ttc.stats.user !== 'N/A' ? 'inline-block' : 'none';
+                document.getElementById('ttc-info-coin').textContent = ttc.stats.coin;
+                document.getElementById('ttc-info-jobs-done').textContent = ttc.stats.jobsDone;
+                document.getElementById('ttc-info-fb-current').textContent = ttc.stats.currentFb;
+                document.getElementById('ttc-info-status').textContent = ttc.stats.status;
+                document.getElementById('ttc-info-status').style.color = ttc.stats.statusColor;
+                document.getElementById('ttc-start-btn').disabled = ttc.isRunning;
+                document.getElementById('ttc-stop-btn').disabled = !ttc.isRunning;
+            }
+        }
+        
+        function appendLog(service, log) {
+            const logContainer = document.getElementById(`${service}-log-container`);
+            if (logContainer) {
+                const el = document.createElement('div');
+                el.className = 'log-entry';
+                el.innerHTML = `<span class="log-time">${log.time}</span><span class="log-msg ${log.type}">${log.message}</span>`;
+                logContainer.appendChild(el);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        }
+        
+        const showToast = (message, type = 'success') => {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 4000);
+        };
+
+        async function apiCall(endpoint, body) {
+             try {
+                const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Lỗi không xác định');
+                return data;
+            } catch (error) {
+                showToast(error.message, 'error');
+                return null;
+            }
+        }
+
+        const eventSource = new EventSource('/events');
+        eventSource.onmessage = (event) => updateUI(JSON.parse(event.data));
+        eventSource.addEventListener('new_log', (event) => appendLog(JSON.parse(event.data).service, JSON.parse(event.data)));
+        eventSource.onerror = () => console.error('EventSource failed.');
+
+        document.getElementById('ttc-start-btn').addEventListener('click', async () => {
+            const ttcToken = document.getElementById('ttc-token').value.trim();
+            if (!ttcToken) return showToast('Vui lòng nhập Token TuongTacCheo.', 'error');
+            const loginRes = await apiCall('/api/ttc/login', { ttcToken });
+            if (loginRes) {
+                showToast(loginRes.message, 'success');
+                const config = {
+                    facebookTokens: document.getElementById('fb-tokens').value,
+                    delay: document.getElementById('ttc-delay-input').value,
+                    limitPerToken: document.getElementById('ttc-limit-input').value,
+                    failLimit: document.getElementById('ttc-fail-limit-input').value,
+                };
+                apiCall('/api/ttc/start', config);
+            }
         });
-    }
-  </script>
+        document.getElementById('ttc-stop-btn').addEventListener('click', () => apiCall('/api/ttc/stop', {}));
+        
+         document.getElementById('vipig-start-btn').addEventListener('click', async () => {
+            const vipigUser = document.getElementById('vipig-user').value.trim();
+            const vipigPass = document.getElementById('vipig-pass').value.trim();
+            if (!vipigUser || !vipigPass) return showToast('Vui lòng nhập tài khoản VipIG.', 'error');
+            const loginRes = await apiCall('/api/vipig/login', { vipigUser, vipigPass });
+            if(loginRes) {
+                showToast(loginRes.message, 'success');
+                const config = {
+                    instagramCookies: document.getElementById('ig-cookies').value,
+                    delay: document.getElementById('vipig-delay-input').value,
+                    changeAfter: document.getElementById('vipig-limit-input').value,
+                };
+                apiCall('/api/vipig/start', config);
+            }
+         });
+        document.getElementById('vipig-stop-btn').addEventListener('click', () => apiCall('/api/vipig/stop', {}));
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('vipig');
+        });
+    </script>
 </body>
 </html>
